@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css"/>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+	<script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
+	<script type="text/javascript">
+function FileViewer(args) {
+    for (var p in args)
+        this[p] = args[p];
+
+    this.reader = new FileReader();
+
+    this.reader.onloadend = (function(self) {
+        return function() {
+                    self.loaded();
+                }
+    })(this);
+}
+FileViewer.prototype.load = function() {
+    this.file = this.controller.files[0];
+    this.reader.readAsText(this.file);
+}
+FileViewer.prototype.loaded = function() {
+    this.view_name.value = this.file.name;
+    this.view_size.value = this.file.size;
+    //不要載入檔案內容到textarea
+	//this.view.value = this.reader.result;
+	var row = JSON.parse(csvJSON(this.reader.result));
+	var str = this.file.name;
+	var subfilename = str.substring(str.lastIndexOf(".") + 1, str.length);
+	if(subfilename==="csv")	buildHtmlTable("#table_display",row);
+	init();
+}
+
+var file_viewer = undefined;
+function init() {
+    file_viewer = new FileViewer(
+        {
+            controller: document.getElementById('file_selector'),
+            view_name: document.getElementById('show_filename'),
+            view_size: document.getElementById('show_filesize'),
+            view: document.getElementById('show_box')
+        }
+    );
+}
+
+</script>
+</head>
+
+<body onload="init();">
+
+
+
+<div>
+<input id="file_selector" type="file" value="" onchange="file_viewer.load();"/>
+</div>
+
+<div>
+Name: <input id="show_filename" type="text"
+            readonly="true" value=""/>
+Size: <input id="show_filesize" type="text"
+            readonly="true" value=""/>
+<br/>
+<textarea id="show_box" cols="60" rows="20" style="display:none">
+</textarea>
+</div>
+
+<table id="table_display" class="display table table-striped">
+</table>
+
+<a href="javascript:exportToCSV()">exportToCSV</a>
+<a href="javascript:ConvertTableToCSV('#table_display')">ConvertTableToCSV</a>
+
+<script type="text/javascript">
+//呼叫用的function
+function exportToCSV( _csvString ) {
+
+	_csvString = document.getElementById("show_box").value;
+
+    var downloadLink = document.createElement("a");
+    downloadLink.download = "dataTable.csv";
+    downloadLink.innerHTML = "Download File";
+
+    if (window.webkitURL != null) {
+	//for chrome
+        var code = encodeURIComponent( _csvString );
+        if ( navigator.appVersion.indexOf("Win")==-1 ) {
+            downloadLink.href = "data:application/csv;charset=utf-8," + code;
+        } else {
+            downloadLink.href = "data:application/csv;charset=utf-8,%EF%BB%BF" + code;
+        }
+    }else if(window.navigator.msSaveOrOpenBlob){
+	//for ie10+
+			var fileData = _csvString;
+			blobObject = new Blob([_csvString]);
+			downloadLink.onclick=function(){
+				window.navigator.msSaveOrOpenBlob(blobObject, downloadLink.download);
+			}
+	}else{
+			alert("Sorry, Your Browser Is Too Old ")
+	}
+    downloadLink.click();
+}
+
+
+
+function csvJSON(csv){
+  var lines=csv.split("\n");
+  var result = [];
+  var headers=lines[0].split(",");
+  for(var i=1;i<lines.length;i++){
+	  var obj = {};
+	  var currentline=lines[i].split(",");
+	  for(var j=0;j<headers.length;j++){
+		  obj[headers[j]] = currentline[j];
+	  }
+	  result.push(obj);
+  }
+  //return result; //JavaScript object
+  return JSON.stringify(result); //JSON
+}
+
+// JSON to CSV Converter
+function ConvertToCSV(objArray) {
+    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+    var str = '';
+
+    for (var i = 0; i < array.length; i++) {
+        var line = '';
+        for (var index in array[i]) {
+            if (line != '') line += ','
+
+            line += array[i][index];
+        }
+
+        str += line + '\r\n';
+    }
+
+    return str;
+}
+		
+// Builds the HTML Table out of myList.
+function buildHtmlTable(selector,myList) {
+  $(selector).empty();
+  var columns = addAllColumnHeaders(myList, selector);
+
+  for (var i = 0; i < myList.length; i++) {
+    var row$ = $('<tr/>');
+    for (var colIndex = 0; colIndex < columns.length; colIndex++) {
+      var cellValue = myList[i][columns[colIndex]];
+      if (cellValue == null) cellValue = "";
+      row$.append($('<td/>').html(cellValue));
+    }
+    $(selector).append(row$);
+  }
+  $(selector).find("td,th").attr("contenteditable","true");
+}
+
+// Adds a header row to the table and returns the set of columns.
+// Need to do union of keys from all records as some records may not contain
+// all records.
+function addAllColumnHeaders(myList, selector) {
+  var columnSet = [];
+  var headerTr$ = $('<tr/>');
+
+  for (var i = 0; i < myList.length; i++) {
+    var rowHash = myList[i];
+    for (var key in rowHash) {
+      if ($.inArray(key, columnSet) == -1) {
+        columnSet.push(key);
+        headerTr$.append($('<th/>').html(key));
+      }
+    }
+  }
+  $(selector).append(headerTr$);
+
+  return columnSet;
+}
+function ConvertTableToCSV(selector) {
+	$(selector).tableToCSV();
+}
+</script>
+
+<pre>
+參考資料
+
+從input file讀檔
+http://tsangprogramlearning.blogspot.tw/2015/01/javascript-csv.html
+
+從網址讀檔
+https://newtoypia.blogspot.tw/2016/06/jquery-get-datatables-jqtree.html
+
+Javascript/ jQuery : Exporting data in CSV not working in IE
+http://stackoverflow.com/questions/18185660/javascript-jquery-exporting-data-in-csv-not-working-in-ie
+
+在網頁應用程式中使用本地檔案
+https://developer.mozilla.org/zh-TW/docs/Using_files_from_web_applications
+
+Reading files in JavaScript using the File APIs
+https://www.html5rocks.com/en/tutorials/file/dndfiles/
+
+HTML5 - File API 簡易教學
+http://rocksaying.tw/archives/15328315.html
+
+convert-csv-to-json-in-javascript
+http://techslides.com/convert-csv-to-json-in-javascript
+
+jQuery Plugin To Convert HTML Table To CSV - tabletoCSV
+http://www.jqueryscript.net/table/jQuery-Plugin-To-Convert-HTML-Table-To-CSV-tabletoCSV.html
+</pre>
+</body>
+</html>
