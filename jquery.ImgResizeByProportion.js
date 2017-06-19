@@ -4,7 +4,7 @@
 
         wdth = $(window).width();
         var mediaquery = [320, 480, 768, 992, 1200];
-        if (mediaquery.contain(wdth320) != -1) {
+        if (mediaquery.contain(wdth) != -1) {
             imgwidth = $(TagClass).width();
             imgheight = imgwidth * Proportion;
             $(TagClass).css("height", imgheight + "px");
