@@ -13,3 +13,6 @@ Some JavaScript function for html page
 單機版假文產生器，
 ## printScreen.js
 友善列印，自動偵測該頁面用了哪些css，只要手動再補上列印用的print.css就好
+
+## jquery.ImgResizeByProportion.js
+依照tag元素寬度，乘上某個比例計算高度，適合用在視窗尺寸改變時重算css
