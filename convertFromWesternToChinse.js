@@ -1,19 +1,22 @@
-    //西元年轉民國年呼叫語法
-    //後面帶數字1=只顯示年份、2只顯示月份、3只顯示日期，未輸入顯示年月日和時間
-    try {
-        var WestToChinese = document.getElementsByClassName("WestToChinese");
-    } catch (ex) {
-        var WestToChinese = document.querySelectorAll('.WestToChinese');
-    }
-    for (var i = 0; i < WestToChinese.length; i++) {
-        WestToChinese[i].innerHTML = convertFromWesternToChinse($.trim(WestToChinese[i].innerHTML));
-    }
+//西元年轉民國年呼叫語法
+//後面帶數字1=只顯示年份、2只顯示月份、3只顯示日期，未輸入顯示年月日和時間
+try {
+    var WestToChinese = document.getElementsByClassName("WestToChinese");
+} catch (ex) {
+    var WestToChinese = document.querySelectorAll('.WestToChinese');
+}
+for (var i = 0; i < WestToChinese.length; i++) {
+    WestToChinese[i].innerHTML = convertFromWesternToChinse($.trim(WestToChinese[i].innerHTML));
+}
     
 //西元年轉民國年
 function convertFromWesternToChinse(western, prop) {
-    //來源可支援以下兩種
+    //來源可支援以下數種
     //2/3/2016 1:24:44 PM
     //2016/02/03 下午 16:23:27
+    //2017-07-25T17:13:40.7
+
+
     //轉出可以匯出5種選項
     // 1:年份 2:月份 3:日期 4:年/月/日  5:年/月/日 時間
     //=================================================
@@ -22,8 +25,23 @@ function convertFromWesternToChinse(western, prop) {
     //=================================================
 
 
+    var IsT = western.indexOf("T");
     var IsAmPm = western.substring(western.length - 1, western.length);
-    if (IsAmPm == "M") {
+
+
+    if (IsT != -1) {
+        //2017-07-25T17:13:40.7
+        var YMD = western.split("-", 3);
+        var YMD2 = YMD[2].split("T", 3);
+        var YMD3 = YMD2[1].split(".", 3);
+
+        var Taiwan_year = leftPad(parseInt(YMD[0]) - 1911, 3);
+        var Taiwan_month = leftPad(YMD[1], 2);
+        var Taiwan_day = YMD2[0];
+        var Taiwan_time = YMD3[0];
+
+    } else if (IsAmPm == "M") {
+        //2/3/2016 1:24:44 PM
         var YMD = western.split(" ", 3);
         var YMD2 = (YMD[0].split("/", 3));
         var Taiwan_year = leftPad(parseInt(YMD2[2]) - 1911, 3);
@@ -31,24 +49,24 @@ function convertFromWesternToChinse(western, prop) {
         var Taiwan_day = leftPad(YMD2[1], 2);
         switch (YMD[2]) {
             case "AM":
-                YMD[2]="上午";
+                YMD[2] = "上午";
                 break;
             case "PM":
                 YMD[2] = "下午";
                 break;
         }
-        var Taiwan_time = YMD[2]+YMD[1];
-
+        var Taiwan_time = YMD[2] + YMD[1];
     } else {
+        //2016/02/03 下午 16:23:27
         var YMD = western.split(" ", 3);
         var YMD2 = (YMD[0].split("/", 3));
         var Taiwan_year = leftPad(parseInt(YMD2[0]) - 1911, 3);
         var Taiwan_month = leftPad(YMD2[1], 2);
         var Taiwan_day = leftPad(YMD2[2], 2);
-        var Taiwan_time = YMD[2];
+        var Taiwan_time = YMD[1]+YMD[2];
     }
-    switch (prop) {
 
+    switch (prop) {
         case 1:
             return Taiwan_year;
             break;
